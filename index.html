@@ -1136,7 +1136,7 @@ const MMH_WA='8801813325332';
 const mmhSupabaseReady=()=>!!(window.MMH_SUPABASE_URL && window.MMH_SUPABASE_PUBLISHABLE_KEY && window.supabase);
 const mmhClient=mmhSupabaseReady()?supabase.createClient(window.MMH_SUPABASE_URL,window.MMH_SUPABASE_PUBLISHABLE_KEY):null;
 const mmhEsc=(s)=>String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
-const mmhWa=(msg)=>window.open('https://wa.me/'+MMH_WA+'?text='+encodeURIComponent(msg),'_blank');
+const mmhWa=(msg)=>{ const url='https://wa.me/'+MMH_WA+'?text='+encodeURIComponent(msg); window.location.assign(url); };
 
 document.getElementById('admissionForm')?.addEventListener('submit',async function(e){
  e.preventDefault();
