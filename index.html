@@ -991,11 +991,11 @@ a[href], .kicker { font-family: 'Montserrat', sans-serif !important; }
 <div><label>Student ID</label><input id="payStudentId" placeholder="MMH-001" required=""/></div>
 <div><label>শিক্ষার্থীর নাম</label><input id="payStudent" required=""/></div>
 <div><label>অভিভাবকের নাম</label><input id="payParent"/></div>
-<div><label>Payment Type</label><select id="payType"><option>Admission Fee - $50</option><option>Monthly Fee - $150</option></select></div>
-<div><label>Payment Method</label><select id="payMethod"><option>Wise</option><option>Bank Transfer</option><option>Other</option></select></div>
+<div><label>Payment Type</label><select id="payType"><option value="admission_fee">Admission Fee - $50</option><option value="monthly_fee">Monthly Fee - $150</option></select></div>
+<div><label>Payment Method</label><select id="payMethod"><option value="wise">Wise</option><option value="bank_transfer">Bank Transfer</option><option value="other">Other</option></select></div>
 <div><label>Transaction / Reference ID</label><input id="payTx" required=""/></div>
 <div><label>Payment Date</label><input id="payDate" required="" type="date"/></div>
-<div><label>Amount (USD)</label><input id="payAmount" required="" step="0.01" type="number" value="150"/></div>
+<div><label>Amount (USD)</label><input id="payAmount" required="" step="0.01" type="number" value="50" readonly/></div>
 <div class="full"><label>অতিরিক্ত তথ্য</label><textarea id="payNote" placeholder="প্রয়োজনে অতিরিক্ত তথ্য"></textarea></div>
 <div class="full system-actions"><button class="btn primary" type="submit">Payment Submit &amp; WhatsApp</button><a class="btn light" href="#receipt-system">Receipt দেখুন</a></div>
 </form>
@@ -1165,6 +1165,10 @@ document.getElementById('admissionForm')?.addEventListener('submit',async functi
 
 (function(){
  const pd=document.getElementById('payDate'); if(pd) pd.value=new Date().toISOString().slice(0,10);
+ const payType=document.getElementById('payType');
+ const payAmount=document.getElementById('payAmount');
+ function syncPaymentAmount(){ if(payType&&payAmount) payAmount.value=payType.value==='admission_fee'?'50':'150'; }
+ if(payType){ payType.addEventListener('change',syncPaymentAmount); syncPaymentAmount(); }
 
  function receipt(data,status='PENDING VERIFICATION'){
    document.getElementById('receiptStatus').textContent=status;
@@ -1178,12 +1182,16 @@ document.getElementById('admissionForm')?.addEventListener('submit',async functi
  }
  document.getElementById('paymentFormSingle')?.addEventListener('submit',async function(e){
    e.preventDefault();
+   const typeSelect=document.getElementById('payType');
+   const methodSelect=document.getElementById('payMethod');
    const data={
     studentId:document.getElementById('payStudentId').value.trim(),
     student:document.getElementById('payStudent').value.trim(),
     parent:document.getElementById('payParent').value.trim(),
-    type:document.getElementById('payType').value,
-    method:document.getElementById('payMethod').value,
+    type:typeSelect.value==='admission_fee'?'Admission Fee - $50':'Monthly Fee - $150',
+    typeDb:typeSelect.value,
+    method:methodSelect.value==='wise'?'Wise':methodSelect.value==='bank_transfer'?'Bank Transfer':'Other',
+    methodDb:methodSelect.value,
     tx:document.getElementById('payTx').value.trim(),
     date:document.getElementById('payDate').value,
     amount:document.getElementById('payAmount').value,
@@ -1193,7 +1201,7 @@ document.getElementById('admissionForm')?.addEventListener('submit',async functi
    if(mmhClient){
      const {error}=await mmhClient.from('payments').insert({
        student_id:data.studentId,student_name:data.student,parent_name:data.parent,
-       payment_type:data.type,payment_method:data.method,transaction_reference:data.tx,
+       payment_type:data.typeDb,payment_method:data.methodDb,transaction_reference:data.tx,
        payment_date:data.date,amount:Number(data.amount),note:data.note,status:'pending'
      });
      if(!error) saved=true; else console.error('Payment DB error',error);
